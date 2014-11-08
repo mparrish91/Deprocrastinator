@@ -27,6 +27,7 @@
     
     self.tableView.allowsMultipleSelection = YES;
     self.toDoItems = [NSMutableArray arrayWithObjects:@"clean", @"cook", @"laundry", @"shower", nil];
+    self.selectedIndexes = [[NSMutableArray alloc]init];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -38,10 +39,35 @@
     
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"toDoCell" forIndexPath:indexPath];
     cell.textLabel.text = [self.toDoItems objectAtIndex:indexPath.row];
+
     
     cell.accessoryType = UITableViewCellAccessoryNone;
+    for (NSNumber *index in self.selectedIndexes) {
+        NSUInteger num = [[self.selectedIndexes objectAtIndex:[self.selectedIndexes indexOfObject:index]] intValue];
+        
+
+        if (num == indexPath.row) {
+            [cell setAccessoryType:UITableViewCellAccessoryCheckmark];
+
+            break;
+        }
+    }
     
     return cell;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    
+    if (cell.accessoryType == UITableViewCellAccessoryNone) {
+        cell.accessoryType = UITableViewCellAccessoryCheckmark;
+        [self.selectedIndexes addObject:[NSNumber numberWithLong:indexPath.row]];
+        
+    }else if (cell.accessoryType == UITableViewCellAccessoryCheckmark){
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        [self.selectedIndexes removeObject:[NSNumber numberWithLong:indexPath.row]];
+    }
+    [tableView deselectRowAtIndexPath:indexPath animated:NO];
 }
 
 -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
@@ -95,18 +121,8 @@
 }
 
 
--(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.accessoryView.hidden = NO;
-    cell.accessoryType = UITableViewCellAccessoryCheckmark;
-    
-}
 
--(void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath{
-    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
-    cell.accessoryView.hidden = YES;
-    cell.accessoryType = UITableViewCellAccessoryNone;
-}
+
 
 
 - (IBAction)onRightGestureSwipe:(UISwipeGestureRecognizer *)gesture {
