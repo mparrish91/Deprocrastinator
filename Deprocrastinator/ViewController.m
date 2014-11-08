@@ -8,12 +8,14 @@
 
 #import "ViewController.h"
 
-@interface ViewController () <UITableViewDataSource, UITableViewDelegate>
+@interface ViewController () <UITableViewDataSource, UITableViewDelegate, UIAlertViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UITextField *textField;
 @property NSMutableArray *toDoItems;
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 @property NSInteger selectedRow;
+@property NSIndexPath *indexPath;
+@property NSMutableArray *selectedIndexes;
 
 @end
 
@@ -23,6 +25,7 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     
+    self.tableView.allowsMultipleSelection = YES;
     self.toDoItems = [NSMutableArray arrayWithObjects:@"clean", @"cook", @"laundry", @"shower", nil];
 }
 
@@ -36,13 +39,8 @@
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"toDoCell" forIndexPath:indexPath];
     cell.textLabel.text = [self.toDoItems objectAtIndex:indexPath.row];
     
-    if (indexPath.row == self.selectedRow) {
-        cell.accessoryType = UITableViewCellAccessoryCheckmark;
-        cell.selected = YES;
-    }else{
-        cell.accessoryType = UITableViewCellAccessoryNone;
-        cell.selected = NO;
-    }
+    cell.accessoryType = UITableViewCellAccessoryNone;
+    
     return cell;
 }
 
@@ -78,21 +76,56 @@
 -(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
     
     if (editingStyle == UITableViewCellEditingStyleDelete) {
-        [self.toDoItems removeObjectAtIndex:indexPath.row];
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-        [tableView reloadData];
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"Confirm" message:@"Yes or No?" delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"Done", nil];
+        [alertView show];
+        self.indexPath = indexPath;
+        
     }
 }
 
--(void)tableView:(UITableView *)tableView didHighlightRowAtIndexPath:(NSIndexPath *)indexPath{
-    self.selectedRow = indexPath.row;
-    [self.tableView reloadData];
+
+-(void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex{
+    if (buttonIndex == 1) {
+        [self.toDoItems removeObjectAtIndex:self.indexPath.row];
+        [self.tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:self.indexPath] withRowAnimation:UITableViewRowAnimationFade];
+        [self.tableView reloadData];
+    }else{
+        [self.tableView setEditing:NO];
+    }
 }
 
 
-
-- (IBAction)onRightGestureSwipe:(id)sender {
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.accessoryView.hidden = NO;
+    cell.accessoryType = UITableViewCellAccessoryCheckmark;
     
+}
+
+-(void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath{
+    UITableViewCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    cell.accessoryView.hidden = YES;
+    cell.accessoryType = UITableViewCellAccessoryNone;
+}
+
+
+- (IBAction)onRightGestureSwipe:(UISwipeGestureRecognizer *)gesture {
+    
+    CGPoint location = [gesture locationInView:self.tableView];
+    NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:location];
+    
+    if (indexPath) {
+        UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+        
+        if (cell.textLabel.backgroundColor == [UIColor greenColor]) {
+            cell.textLabel.backgroundColor = [UIColor yellowColor];
+        }else if (cell.textLabel.backgroundColor == [UIColor yellowColor]){
+            cell.textLabel.backgroundColor = [UIColor redColor];
+        }else{
+            cell.textLabel.backgroundColor = [UIColor greenColor];
+        }
+    
+    }
 }
 
 
